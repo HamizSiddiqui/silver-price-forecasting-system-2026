@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse
 from prophet.serialize import model_from_json
 import pandas as pd
 
@@ -8,6 +9,7 @@ app = FastAPI()
 handler = app  # required for Vercel
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "latest_model.json"
+PLOT_HTML_PATH = Path(__file__).resolve().parent / "forecast_plot.html"
 _model_cache = None
 
 
@@ -25,9 +27,21 @@ def load_model():
     return _model_cache
 
 
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)
+
+
 @app.get("/")
 def home():
     return {"message": "Silver Forecast API Running"}
+
+
+@app.get("/plot")
+def plot():
+    if not PLOT_HTML_PATH.exists():
+        raise HTTPException(status_code=404, detail="Plot HTML file not found")
+    return FileResponse(str(PLOT_HTML_PATH), media_type="text/html")
 
 
 @app.get("/predict")
