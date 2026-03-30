@@ -1,22 +1,46 @@
-from fastapi import FastAPI
-from prophet import Prophet
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from prophet.serialize import model_from_json
 import pandas as pd
 
 app = FastAPI()
 handler = app  # required for Vercel
 
+MODEL_PATH = Path(__file__).resolve().parent / "models" / "latest_model.json"
+_model_cache = None
+
+
 def load_model():
-    model = Prophet()
-    model = model.load("models/latest_model.json")
-    return model
+    global _model_cache
+    if _model_cache is not None:
+        return _model_cache
+
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
+
+    with MODEL_PATH.open("r", encoding="utf-8") as f:
+        _model_cache = model_from_json(f.read())
+
+    return _model_cache
+
 
 @app.get("/")
 def home():
     return {"message": "Silver Forecast API Running"}
 
+
 @app.get("/predict")
 def predict(days: int = 10):
-    model = load_model()
+    if days < 1:
+        raise HTTPException(status_code=400, detail="days must be a positive integer")
+
+    try:
+        model = load_model()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to load forecast model")
 
     future = model.make_future_dataframe(periods=days)
     forecast = model.predict(future)
