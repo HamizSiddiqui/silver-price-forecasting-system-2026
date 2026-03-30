@@ -136,7 +136,7 @@ def main() -> None:
     forecast = model.predict(future)
 
     fig = create_forecast_plot(df, forecast)
-    output_file = Path("models") / "forecast_plot.html"
+    output_file = Path("forecast_plot.html")
     fig.write_html(output_file, include_plotlyjs="cdn")
     print(f"Forecast plot saved to {output_file.resolve()}")
     fig.show()
