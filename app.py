@@ -34,6 +34,8 @@ def favicon():
 
 @app.get("/")
 def home():
+    if PLOT_HTML_PATH.exists():
+        return FileResponse(str(PLOT_HTML_PATH), media_type="text/html")
     return {"message": "Silver Forecast API Running"}
 
 
