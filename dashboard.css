@@ -34,8 +34,9 @@ body {
     font-size: 1.75rem;
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -57,6 +58,76 @@ body {
     transform: translateY(-5px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     border-color: #475569;
+}
+
+/* Profile Navigation */
+.profile-nav {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-info {
+    text-align: right;
+}
+
+.profile-name {
+    color: var(--accent-cyan);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.profile-title {
+    color: #ff00ff; /* Neon Magenta/Purple */
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.4);
+    margin-top: 2px;
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+}
+
+.social-icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    transform: translateY(-3px);
+}
+
+.social-icon.github:hover {
+    color: #fff;
+}
+
+.social-icon.linkedin:hover {
+    color: #0077b5;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.metric-card, .graph-card {
+    animation: fadeInUp 0.6s ease-out forwards;
 }
 
 .metric-icon {
@@ -90,9 +161,25 @@ body {
 .graph-card {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 20px;
+    padding: 24px;
     border: 1px solid #334155;
     margin-top: 30px;
+    overflow: hidden; /* Prevent inner content from breaking border radius */
+}
+
+.graph-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+}
+
+/* Ensure the graph maintains a minimum width on mobile to avoid squeezing */
+@media (max-width: 768px) {
+    .plotly-graph-div {
+        min-width: 700px; /* Force minimum width to trigger scrollbar */
+        height: 400px !important; /* Slightly smaller height for mobile */
+    }
 }
 
 .graph-header {
