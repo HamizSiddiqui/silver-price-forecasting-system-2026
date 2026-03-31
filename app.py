@@ -5,8 +5,13 @@ from fastapi.responses import FileResponse
 from prophet.serialize import model_from_json
 import pandas as pd
 
+from fastapi.staticfiles import StaticFiles
+
 app = FastAPI()
 handler = app  # required for Vercel
+
+# Serve static files (CSS, JS) from the current directory
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "latest_model.json"
 PLOT_HTML_PATH = Path(__file__).resolve().parent / "forecast_plot.html"
