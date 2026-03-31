@@ -14,3 +14,7 @@ This project predicts silver prices using Prophet and automates retraining using
 - FastAPI
 - GitHub Actions
 - Vercel
+
+<img width="1535" height="840" alt="image" src="https://github.com/user-attachments/assets/f96927db-d401-4e62-9ba8-eaca79473de5" />
+
+
