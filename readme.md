@@ -1,4 +1,4 @@
-# Silver Price Forecasting System
+# Real Time Silver Price Forecasting System
 
 This is a real-time forecast project that predicts silver prices using Prophet and automates retraining using GitHub Actions.
 
