@@ -1,6 +1,6 @@
 # Silver Price Forecasting System
 
-This project predicts silver prices using Prophet and automates retraining using GitHub Actions.
+This is a real-time forecast project that predicts silver prices using Prophet and automates retraining using GitHub Actions.
 
 ## Features
 - Daily data scraping
