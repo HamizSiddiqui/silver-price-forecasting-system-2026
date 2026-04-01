@@ -2,12 +2,17 @@ name: Daily Retraining
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
@@ -18,7 +23,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python main.py
+      - run: python main.py --once
 
       - name: Commit changes
         run: |
