@@ -1,11 +1,30 @@
 // Dashboard Dynamic Data & UI Logic
-
-const dashboardData = {
-    trainingTime: "March 31, 2026, 03:32 AM",
-    currentPrice: 19579.0,
-    predictedPrice: 19842.0,
+let dashboardData = {
+    trainingTime: "Loading...",
+    currentPrice: 0.0,
+    predictedPrice: 0.0,
     unit: 'tola'
 };
+
+async function fetchMetrics() {
+    try {
+        const response = await fetch('/metrics');
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error("API error:", data.error);
+            return;
+        }
+
+        dashboardData.trainingTime = data.training_time;
+        dashboardData.currentPrice = data.current_price;
+        dashboardData.predictedPrice = data.predicted_price;
+        
+        updateMetrics();
+    } catch (err) {
+        console.error("Failed to fetch metrics:", err);
+    }
+}
 
 function updateMetrics() {
     document.getElementById('training-time').innerText = dashboardData.trainingTime;
@@ -47,9 +66,11 @@ function setUnit(unit) {
     });
 
     updateMetrics();
-    // In a real app, we would also update the graph data here
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    updateMetrics();
+    fetchMetrics();
+    // Re-initialize metrics icons if needed
+    if (window.lucide) lucide.createIcons();
 });
+

@@ -15,6 +15,8 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "latest_model.json"
 PLOT_HTML_PATH = Path(__file__).resolve().parent / "forecast_plot.html"
+INDEX_PATH = Path(__file__).resolve().parent / "index.html"
+DATA_PATH = Path(__file__).resolve().parent / "data" / "silver_prices.csv"
 _model_cache = None
 
 
@@ -39,9 +41,43 @@ def favicon():
 
 @app.get("/")
 def home():
-    if PLOT_HTML_PATH.exists():
-        return FileResponse(str(PLOT_HTML_PATH), media_type="text/html")
-    return {"message": "Silver Forecast API Running"}
+    if INDEX_PATH.exists():
+        return FileResponse(str(INDEX_PATH), media_type="text/html")
+    return {"message": "Silver Forecast System Running"}
+
+
+@app.get("/graph")
+def graph_plot():
+    if not PLOT_HTML_PATH.exists():
+        raise HTTPException(status_code=404, detail="Forecast plot not found")
+    return FileResponse(str(PLOT_HTML_PATH), media_type="text/html")
+
+
+@app.get("/metrics")
+def get_metrics():
+    try:
+        # Load latest data
+        df = pd.read_csv(DATA_PATH)
+        current_price = float(df.iloc[-1]["Silver_PKR_per_Ounce"])
+        
+        # Load model & forecast
+        model = load_model()
+        future = model.make_future_dataframe(periods=1)
+        forecast = model.predict(future)
+        pred_price = float(forecast.iloc[-1]["yhat"])
+        
+        # Get last update time
+        last_update = Path(DATA_PATH).stat().st_mtime
+        from datetime import datetime
+        last_update_str = datetime.fromtimestamp(last_update).strftime("%B %d, %Y, %I:%M %p")
+        
+        return {
+            "current_price": current_price,
+            "predicted_price": pred_price,
+            "training_time": last_update_str
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/plot")
