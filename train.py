@@ -52,6 +52,14 @@ def save_model(model: Prophet) -> None:
     MODEL_FILE.write_text(model_json, encoding="utf-8")
     logger.info("Saved trained model to %s", MODEL_FILE)
 
+    # Save training metadata (timestamp) so Vercel can read it reliably
+    import json
+    from datetime import datetime, timezone
+    meta = {"trained_at": datetime.now(timezone.utc).isoformat()}
+    meta_path = MODEL_DIR / "training_meta.json"
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    logger.info("Saved training metadata to %s", meta_path)
+
 
 def train_model() -> Prophet:
     df = load_training_data()

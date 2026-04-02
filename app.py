@@ -66,10 +66,18 @@ def get_metrics():
         forecast = model.predict(future)
         pred_price = float(forecast.iloc[-1]["yhat"])
         
-        # Get last update time from the trained model file
-        last_update = Path(MODEL_PATH).stat().st_mtime
-        from datetime import datetime
-        last_update_str = datetime.fromtimestamp(last_update).strftime("%B %d, %Y, %I:%M %p")
+        # Get last training time from metadata file (reliable on Vercel)
+        import json
+        from datetime import datetime, timezone
+        meta_path = Path(__file__).resolve().parent / "models" / "training_meta.json"
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            trained_at = datetime.fromisoformat(meta["trained_at"])
+            last_update_str = trained_at.strftime("%B %d, %Y, %I:%M %p") + " UTC"
+        else:
+            # Fallback to file mtime (works locally, unreliable on Vercel)
+            last_update = Path(MODEL_PATH).stat().st_mtime
+            last_update_str = datetime.fromtimestamp(last_update).strftime("%B %d, %Y, %I:%M %p")
         
         return {
             "current_price": current_price,
