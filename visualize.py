@@ -156,10 +156,19 @@ def main() -> None:
     fig = create_forecast_plot(df, forecast)
     output_file = Path("forecast_plot.html")
     # Using config to hide the modebar and stabilize touch
+    config = {'displayModeBar': False, 'staticPlot': False, 'scrollZoom': False}
+    # We add touch-action: pan-y to allow vertical page scrolling through the graph
+    post_script = """
+    <style>
+        .js-plotly-plot .plotly .main-svg { touch-action: pan-y !important; }
+        body { touch-action: pan-y !important; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+    </style>
+    """
     fig.write_html(
         output_file, 
         include_plotlyjs="cdn",
-        config={'displayModeBar': False, 'staticPlot': False, 'scrollZoom': False}
+        config=config,
+        post_script=post_script
     )
     print(f"Forecast plot saved to {output_file.resolve()}")
     fig.show()
