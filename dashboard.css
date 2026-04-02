@@ -34,29 +34,35 @@ body {
     margin-bottom: 2rem;
 }
 
-.profile-info {
-    text-align: right;
-    margin-right: 1.5rem;
-    display: inline-block;
+.profile-section {
+    display: flex;
+    align-items: center; /* Vertically centers the social icons against the 2 lines of text */
+    gap: 1.5rem;
 }
 
-.profile-info h4 {
+.profile-text {
+    text-align: right;
+}
+
+.profile-text h4 {
     color: var(--accent-blue);
     font-size: 1.2rem;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.1rem;
+    line-height: 1.2;
 }
 
-.profile-info .role {
-    color: #ff00ff; /* Pink as seen in user image */
-    font-size: 0.8rem;
+.profile-text .role {
+    color: #ff00ff; /* Pink branding */
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
+    line-height: 1;
 }
 
 .social-icons {
-    display: inline-flex;
+    display: flex;
     gap: 1rem;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     align-items: center;
 }
 
@@ -189,22 +195,57 @@ body {
     color: white;
 }
 
-/* Graph Area */
+/* Graph Area with Scroll Prevention */
 .graph-box {
     width: 100%;
     height: 600px;
     background-color: white;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+    overflow-y: hidden;
+    border: 1px solid var(--border-color);
+    position: relative;
 }
 
 #forecast-iframe {
     width: 100%;
     height: 100%;
+    border: none;
+    display: block;
 }
 
 @media (max-width: 1024px) {
     .metrics-row {
         flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .top-header {
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+
+    .profile-text {
+        text-align: center;
+    }
+
+    .main-title h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Prevent graph squishing on small screens */
+    #forecast-iframe {
+        min-width: 800px; /* Force minimum width to keep legend items readable */
     }
 }

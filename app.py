@@ -66,8 +66,8 @@ def get_metrics():
         forecast = model.predict(future)
         pred_price = float(forecast.iloc[-1]["yhat"])
         
-        # Get last update time
-        last_update = Path(DATA_PATH).stat().st_mtime
+        # Get last update time from the trained model file
+        last_update = Path(MODEL_PATH).stat().st_mtime
         from datetime import datetime
         last_update_str = datetime.fromtimestamp(last_update).strftime("%B %d, %Y, %I:%M %p")
         

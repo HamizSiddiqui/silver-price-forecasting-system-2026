@@ -119,11 +119,29 @@ def create_forecast_plot(df: pd.DataFrame, forecast: pd.DataFrame) -> go.Figure:
     )
 
     fig.update_layout(
-        title=f"Silver Price Pakistan — Prophet Forecast (R² = {r2:.2f})",
+        title=dict(
+            text=f"Silver Price Pakistan — Prophet Forecast (R² = {r2:.2f})",
+            x=0.5,
+            xanchor='center'
+        ),
         xaxis_title="Date",
         yaxis_title="Price / Converted Units",
         hovermode="x unified",
-        template="plotly_white",
+        template="plotly_dark", # Matching your theme
+        xaxis=dict(fixedrange=True), # Lock zoom/pan
+        yaxis=dict(fixedrange=True), # Lock zoom/pan
+        margin=dict(l=20, r=180, t=60, b=20),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(0,0,0,0.6)",
+            bordercolor="rgba(255,255,255,0.2)",
+            borderwidth=1,
+            font=dict(size=11)
+        )
     )
     return fig
 
@@ -137,7 +155,12 @@ def main() -> None:
 
     fig = create_forecast_plot(df, forecast)
     output_file = Path("forecast_plot.html")
-    fig.write_html(output_file, include_plotlyjs="cdn")
+    # Using config to hide the modebar and stabilize touch
+    fig.write_html(
+        output_file, 
+        include_plotlyjs="cdn",
+        config={'displayModeBar': False, 'staticPlot': False, 'scrollZoom': False}
+    )
     print(f"Forecast plot saved to {output_file.resolve()}")
     fig.show()
 
