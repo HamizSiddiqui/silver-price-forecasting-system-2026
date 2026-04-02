@@ -94,9 +94,16 @@ body {
     font-weight: 500;
     font-size: 1rem;
     display: flex;
-    align-items: center;
+    align-items: baseline; /* Align icon with the first line of text */
     justify-content: center;
-    gap: 0.8rem;
+    gap: 0.6rem;
+    flex-wrap: wrap; 
+}
+
+.main-title p i {
+    font-size: 0.9rem;
+    position: relative;
+    top: 1px;
 }
 
 /* Metric Cards Layout */
@@ -164,10 +171,16 @@ body {
 
 .card-header .title {
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertical center remains best for titles */
     gap: 1rem;
     font-size: 1.3rem;
     font-weight: 700;
+    flex-wrap: nowrap;
+}
+
+.card-header .title i {
+    flex-shrink: 0; 
+    color: var(--accent-blue);
 }
 
 /* Toggle Buttons for Graph */
@@ -240,12 +253,48 @@ body {
         text-align: center;
     }
 
-    .main-title h1 {
-        font-size: 1.8rem;
-    }
-
     /* Prevent graph squishing on small screens */
     #forecast-iframe {
-        min-width: 800px; /* Force minimum width to keep legend items readable */
+        min-width: 800px;
+        pointer-events: auto;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.2rem;
+    }
+
+    .card-header .title {
+        font-size: 1.2rem;
+        width: 100%;
+    }
+
+    .card-header .unit-selector {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        padding: 2px;
+    }
+
+    .btn {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .graph-box {
+        height: 400px; /* More compact for mobile */
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y; /* CRITICAL: Allows page scroll even when touching graph */
+        overflow-x: auto;
+    }
+
+    .main-title h1 {
+        font-size: 1.5rem;
+        line-height: 1.1;
+    }
+
+    .main-title p {
+        font-size: 0.9rem;
     }
 }
