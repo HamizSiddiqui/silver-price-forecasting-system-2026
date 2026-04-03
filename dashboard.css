@@ -212,12 +212,13 @@ body {
 .graph-box {
     width: 100%;
     height: 600px;
-    background-color: white;
+    background-color: var(--card-bg); /* Match card theme */
     border-radius: 8px;
     overflow-x: auto; /* Allow horizontal scrolling on small screens */
     overflow-y: hidden;
     border: 1px solid var(--border-color);
     position: relative;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 #forecast-iframe {

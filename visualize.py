@@ -66,55 +66,71 @@ def create_forecast_plot(df: pd.DataFrame, forecast: pd.DataFrame) -> go.Figure:
 
     fig = go.Figure()
 
+    # Add traces for Tola, Gram, and KG (matching requested colors)
+    # Tola: Blue/Indigo
     fig.add_trace(
         go.Scatter(
             x=df["Date"],
             y=df["tola"],
             mode="lines",
             name="Tola (Historical)",
+            line=dict(color="#636efa", width=2),
         )
     )
+    # Gram: Red/Orange
     fig.add_trace(
         go.Scatter(
             x=df["Date"],
             y=df["gram"],
             mode="lines",
             name="Gram (Historical)",
+            line=dict(color="#ef553b", width=2),
+            visible="legendonly",
         )
     )
+    # Kilogram: Green
     fig.add_trace(
         go.Scatter(
             x=df["Date"],
             y=df["kg"],
             mode="lines",
             name="Kilogram (Historical)",
+            line=dict(color="#00cc96", width=2),
+            visible="legendonly",
         )
     )
+
+    # Forecast traces (using dashed lines with corresponding colors)
+    # Tola Forecast: Purple
     fig.add_trace(
         go.Scatter(
             x=forecast_units["Date"],
             y=forecast_units["tola"],
             mode="lines",
             name="Tola (Forecast)",
-            line=dict(dash="dash"),
+            line=dict(dash="dash", color="#ab63fa", width=2),
         )
     )
+    # Gram Forecast: Light Orange/Red
     fig.add_trace(
         go.Scatter(
             x=forecast_units["Date"],
             y=forecast_units["gram"],
             mode="lines",
             name="Gram (Forecast)",
-            line=dict(dash="dash"),
+            line=dict(dash="dash", color="#ffa15a", width=2),
+            visible="legendonly",
         )
     )
+    # Kilogram Forecast: Light Blue/Cyan
     fig.add_trace(
         go.Scatter(
             x=forecast_units["Date"],
             y=forecast_units["kg"],
             mode="lines",
             name="Kilogram (Forecast)",
-            line=dict(dash="dash"),
+            line=dict(dash="dash", color="#19d3f3", width=2),
+            visible="legendonly",
         )
     )
 
@@ -122,15 +138,26 @@ def create_forecast_plot(df: pd.DataFrame, forecast: pd.DataFrame) -> go.Figure:
         title=dict(
             text=f"Silver Price Pakistan — Prophet Forecast (R² = {r2:.2f})",
             x=0.5,
-            xanchor='center'
+            xanchor='center',
+            font=dict(color="white", size=20)
         ),
         xaxis_title="Date",
         yaxis_title="Price / Converted Units",
         hovermode="x unified",
-        template="plotly_dark", # Matching your theme
-        xaxis=dict(fixedrange=True), # Lock zoom/pan
-        yaxis=dict(fixedrange=True), # Lock zoom/pan
-        margin=dict(l=20, r=180, t=60, b=20),
+        template="plotly_dark",
+        paper_bgcolor="black",
+        plot_bgcolor="black",
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#2c2c2c",
+            title_font=dict(color="#94a3b8")
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#2c2c2c",
+            title_font=dict(color="#94a3b8")
+        ),
+        margin=dict(l=60, r=180, t=100, b=60),
         legend=dict(
             orientation="v",
             yanchor="top",
@@ -140,7 +167,7 @@ def create_forecast_plot(df: pd.DataFrame, forecast: pd.DataFrame) -> go.Figure:
             bgcolor="rgba(0,0,0,0.6)",
             bordercolor="rgba(255,255,255,0.2)",
             borderwidth=1,
-            font=dict(size=11)
+            font=dict(size=11, color="white")
         )
     )
     return fig
@@ -155,23 +182,60 @@ def main() -> None:
 
     fig = create_forecast_plot(df, forecast)
     output_file = Path("forecast_plot.html")
-    # Using config to hide the modebar and stabilize touch
-    config = {'displayModeBar': False, 'staticPlot': False, 'scrollZoom': False}
-    # We add touch-action: pan-y to allow vertical page scrolling through the graph
+    
+    # Enhanced config for mobile stability and interactivity
+    config = {
+        'displayModeBar': False,
+        'responsive': True,
+        'scrollZoom': False
+    }
+    
+    # Pure JavaScript for post_script (No <script> or <style> tags allowed here)
     post_script = """
-    <style>
-        .js-plotly-plot .plotly .main-svg { touch-action: pan-y !important; }
-        body { touch-action: pan-y !important; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-    </style>
+    // Inject CSS
+    var style = document.createElement('style');
+    style.innerHTML = `
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh !important;
+            width: 100vw !important;
+            background-color: #1e293b !important;
+            overflow: hidden !important;
+        }
+        .plotly-graph-div {
+            height: 100vh !important;
+            width: 100vw !important;
+        }
+        .js-plotly-plot .plotly .main-svg {
+            touch-action: pan-y !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Force redraw on window resize
+    window.addEventListener('resize', function() {
+        var plotDiv = document.getElementsByClassName('plotly-graph-div')[0];
+        if (plotDiv) {
+            Plotly.Plots.resize(plotDiv);
+        }
+    });
+
+    // Initial resize trigger
+    setTimeout(function() {
+        var plotDiv = document.getElementsByClassName('plotly-graph-div')[0];
+        if (plotDiv) Plotly.Plots.resize(plotDiv);
+    }, 100);
     """
+    
     fig.write_html(
         output_file, 
         include_plotlyjs="cdn",
         config=config,
-        post_script=post_script
+        post_script=post_script,
+        full_html=True
     )
     print(f"Forecast plot saved to {output_file.resolve()}")
-    fig.show()
 
 
 if __name__ == "__main__":
