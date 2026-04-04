@@ -2,11 +2,11 @@ name: Daily Retraining
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    # Run twice daily: 8 AM and 8 PM UTC (enough for daily price updates)
+    # Running too often triggers rate-limiting from the data source
+    - cron: '0 8 * * *'
+    - cron: '0 20 * * *'
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   run:
@@ -29,9 +29,14 @@ jobs:
         run: |
           git config --global user.name "bot"
           git config --global user.email "bot@github.com"
-          git add .
-          git commit -m "Auto update model" || echo "No changes"
-          git push
+          git add data/ models/ forecast_plot.html
+          if git diff --cached --quiet; then
+            echo "No actual data changes to commit."
+          else
+            git commit -m "Auto update model"
+            git pull --rebase origin main
+            git push
+          fi
 
       # IMPORTANT: To trigger a new Vercel deployment when the model is updated,
       # add a VERCEL_DEPLOY_HOOK_URL secret in your repository settings.

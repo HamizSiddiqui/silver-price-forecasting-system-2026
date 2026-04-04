@@ -22,11 +22,7 @@ def run_pipeline(skip_training_if_no_new_data: bool = True) -> None:
         return
 
     if skip_training_if_no_new_data and not new_data_added:
-        logger.info("No new data was added. Skipping model retraining.")
-        try:
-            visualize_main()
-        except Exception as exc:  # pragma: no cover
-            logger.exception("Visualization failed: %s", exc)
+        logger.info("No new data was added. Skipping model retraining and visualization.")
         return
 
     try:
