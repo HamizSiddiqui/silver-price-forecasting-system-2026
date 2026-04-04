@@ -1,15 +1,50 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
-from scraper import scrape_latest_price
+from scraper import scrape_latest_price, DATA_FILE
 from train import train_model
 from visualize import main as visualize_main
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
+
+META_FILE = Path("models") / "training_meta.json"
+
+
+def is_model_stale() -> bool:
+    """Check if the latest data in CSV is newer than the model's training date."""
+    if not DATA_FILE.exists():
+        return False
+    
+    # Get last date from CSV
+    try:
+        import pandas as pd
+        df = pd.read_csv(DATA_FILE)
+        if df.empty:
+            return False
+        last_csv_date = pd.to_datetime(df.iloc[-1]["Date"]).date()
+    except Exception as exc:
+        logger.warning("Could not read CSV for staleness check: %s", exc)
+        return False
+
+    # Get last training date from metadata
+    if not META_FILE.exists():
+        return True
+
+    try:
+        meta = json.loads(META_FILE.read_text(encoding="utf-8"))
+        last_train_dt = datetime.fromisoformat(meta["trained_at"]).date()
+    except Exception as exc:
+        logger.warning("Could not read metadata for staleness check: %s", exc)
+        return True
+
+    return last_csv_date > last_train_dt
 
 
 def run_pipeline(skip_training_if_no_new_data: bool = True) -> None:
@@ -22,8 +57,11 @@ def run_pipeline(skip_training_if_no_new_data: bool = True) -> None:
         return
 
     if skip_training_if_no_new_data and not new_data_added:
-        logger.info("No new data was added. Skipping model retraining and visualization.")
-        return
+        if is_model_stale():
+            logger.info("Sync required: CSV has newer data than model metadata. Triggering retrain.")
+        else:
+            logger.info("No action needed: data is up to date and model is already trained on latest data.")
+            return
 
     try:
         train_model()
