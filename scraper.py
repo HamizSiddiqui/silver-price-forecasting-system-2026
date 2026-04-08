@@ -18,11 +18,10 @@ YEARLY_URL = "https://www.exchange-rates.org/precious-metals/silver-price/pakist
 
 # Rotate User-Agents to avoid datacenter IP blocking
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
 ]
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -64,11 +63,7 @@ def parse_date_text(date_text: str, year: int) -> Optional[datetime]:
 
 
 def _build_session() -> requests.Session:
-    """Build a requests Session with realistic browser headers.
-    
-    Visits the homepage first to collect cookies/tokens, which
-    helps bypass bot detection on the data pages.
-    """
+    """Build a requests Session with realistic browser headers."""
     session = requests.Session()
     ua = random.choice(USER_AGENTS)
     session.headers.update({
@@ -78,26 +73,7 @@ def _build_session() -> requests.Session:
         "Accept-Encoding": "gzip, deflate, br",
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Cache-Control": "max-age=0",
     })
-    
-    # Warm up: visit homepage to acquire cookies/session tokens
-    try:
-        logger.info("Warming up session by visiting homepage...")
-        session.get("https://www.exchange-rates.org/", timeout=15)
-        time.sleep(random.uniform(1.5, 3.0))
-        # Now set Referer for subsequent requests
-        session.headers.update({
-            "Referer": "https://www.exchange-rates.org/",
-            "Sec-Fetch-Site": "same-origin",
-        })
-    except Exception:
-        logger.warning("Homepage warmup failed, proceeding without cookies")
-    
     return session
 
 
@@ -122,17 +98,18 @@ def _fetch_page_with_retry(url: str, max_retries: int = 3) -> Optional[str]:
                         response.status_code, content_len)
 
             if response.status_code != 200:
-                logger.warning("Attempt %d: Got non-200 status: %d", attempt, response.status_code)
-            elif content_len < 50000:
-                logger.warning("Attempt %d: Response too short (%d bytes) — likely blocked/bot-detected",
-                               attempt, content_len)
+                logger.warning("Attempt %d: Got status %d", attempt, response.status_code)
             else:
-                # Verify the response actually contains a price table
+                if content_len < 20000: # Lowered threshold slightly to see what we get
+                    logger.warning("Attempt %d: Response suspiciously short (%d bytes)", attempt, content_len)
+                
                 if "<table" in response.text.lower():
-                    logger.info("Attempt %d: Got valid response with table", attempt)
+                    logger.info("Attempt %d: Valid 200 OK with table (%d bytes)", attempt, content_len)
                     return response.text
                 else:
-                    logger.warning("Attempt %d: Response has no <table> — likely a CAPTCHA page", attempt)
+                    logger.warning("Attempt %d: No <table> found in %d bytes", attempt, content_len)
+                    # Log first 200 chars to see if it's a captcha/error page
+                    logger.info("Content preview: %s", response.text[:200].replace('\n', ' '))
 
         except requests.exceptions.RequestException as exc:
             logger.warning("Attempt %d: Request failed: %s", attempt, exc)
