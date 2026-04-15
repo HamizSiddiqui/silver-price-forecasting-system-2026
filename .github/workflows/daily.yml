@@ -6,6 +6,9 @@ on:
     # Running too often triggers rate-limiting from the data source
     - cron: '0 8 * * *'
     - cron: '0 20 * * *'
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -23,7 +26,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python main.py --once
+      - run: python main.py --once --force-train
 
       - name: Commit changes
         run: |
