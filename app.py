@@ -68,16 +68,21 @@ def get_metrics():
         
         # Get last training time from metadata file (reliable on Vercel)
         import json
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, timedelta
+        
+        PKT = timezone(timedelta(hours=5))
         meta_path = Path(__file__).resolve().parent / "models" / "training_meta.json"
+        
         if meta_path.exists():
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-            trained_at = datetime.fromisoformat(meta["trained_at"])
-            last_update_str = trained_at.strftime("%B %d, %Y, %I:%M %p") + " UTC"
+            # Parse UTC time and convert to PKT
+            trained_at_utc = datetime.fromisoformat(meta["trained_at"])
+            trained_at_pkt = trained_at_utc.astimezone(PKT)
+            last_update_str = trained_at_pkt.strftime("%B %d, %Y, %I:%M %p") + " PKT"
         else:
-            # Fallback to file mtime (works locally, unreliable on Vercel)
+            # Fallback
             last_update = Path(MODEL_PATH).stat().st_mtime
-            last_update_str = datetime.fromtimestamp(last_update).strftime("%B %d, %Y, %I:%M %p")
+            last_update_str = datetime.fromtimestamp(last_update, tz=PKT).strftime("%B %d, %Y, %I:%M %p") + " PKT"
         
         return {
             "current_price": current_price,
