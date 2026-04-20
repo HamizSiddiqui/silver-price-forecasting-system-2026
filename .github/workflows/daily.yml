@@ -19,6 +19,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Ensure the runner keeps the repo credentials so `git push` works
+          persist-credentials: true
 
       - uses: actions/setup-python@v5
         with:
@@ -26,26 +29,51 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python main.py --once --force-train
-
-      - name: Commit changes
+      - name: Run pipeline (scrape, train, visualize)
         run: |
-          git config --global user.name "bot"
-          git config --global user.email "bot@github.com"
-          git add data/ models/ forecast_plot.html
+          set -o pipefail
+          python main.py --once --force-train 2>&1 | tee pipeline.log
+
+      - name: Show pipeline outputs and artifacts for debug
+        run: |
+          echo '--- repo status ---'
+          git status --porcelain
+          echo '--- files (data models top) ---'
+          ls -la data || true
+          ls -la models || true
+          echo '--- head of CSV ---'
+          if [ -f data/silver_prices.csv ]; then head -n 20 data/silver_prices.csv; else echo 'no csv'; fi
+          echo '--- training_meta.json ---'
+          if [ -f models/training_meta.json ]; then cat models/training_meta.json; else echo 'no meta'; fi
+          echo '--- forecast_plot preview ---'
+          if [ -f forecast_plot.html ]; then head -n 20 forecast_plot.html; else echo 'no plot'; fi
+          echo '--- pipeline log tail ---'
+          tail -n 200 pipeline.log || true
+
+      - name: Commit changes (if any)
+        env:
+          GIT_AUTHOR_NAME: bot
+          GIT_AUTHOR_EMAIL: bot@github.com
+        run: |
+          git config user.name "${GIT_AUTHOR_NAME}"
+          git config user.email "${GIT_AUTHOR_EMAIL}"
+          git add data/ models/ forecast_plot.html || true
+          echo 'Staged files:'
+          git diff --cached --name-only || true
           if git diff --cached --quiet; then
-            echo "No actual data changes to commit."
+            echo "No actual data or model changes to commit."
           else
             git commit -m "Auto update model"
+            echo 'Attempting to push changes to origin main'
             git pull --rebase origin main
-            git push
+            git push origin HEAD:main
           fi
 
       # IMPORTANT: To trigger a new Vercel deployment when the model is updated,
       # add a VERCEL_DEPLOY_HOOK_URL secret in your repository settings.
       # You can get this URL from your Vercel Project Settings > Git > Deploy Hooks.
       - name: Trigger Vercel Deploy Hook
-        if: env.VERCEL_DEPLOY_HOOK_URL != ''
-        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
-        env:
-          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK_URL != '' }}
+        run: |
+          echo 'Triggering Vercel deploy via secret hook URL'
+          curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" || echo 'Vercel hook failed'
