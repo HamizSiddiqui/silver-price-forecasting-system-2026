@@ -26,7 +26,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python main.py --once --force-train
+      - run: python main.py --once
 
       - name: Commit changes
         run: |
